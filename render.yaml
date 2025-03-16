@@ -2,7 +2,7 @@ services:
   - type: web
     name: egitim-sitesi
     env: docker
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
@@ -36,6 +36,6 @@ services:
 
 databases:
   - name: egitim-sitesi-db
-    plan: starter
+    plan: free
     databaseName: egitim_sitesi
     ipAllowList: [] 
