@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: egitim-sitesi
+    env: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PGUSER
+        fromDatabase:
+          name: egitim-sitesi-db
+          property: user
+      - key: PGPASSWORD
+        fromDatabase:
+          name: egitim-sitesi-db
+          property: password
+      - key: PGHOST
+        fromDatabase:
+          name: egitim-sitesi-db
+          property: host
+      - key: PGPORT
+        fromDatabase:
+          name: egitim-sitesi-db
+          property: port
+      - key: PGDATABASE
+        fromDatabase:
+          name: egitim-sitesi-db
+          property: database
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+databases:
+  - name: egitim-sitesi-db
+    plan: starter
+    databaseName: egitim_sitesi
+    ipAllowList: [] 
