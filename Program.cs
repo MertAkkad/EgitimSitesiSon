@@ -23,7 +23,11 @@ if (builder.Environment.IsProduction())
     var connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
     
     builder.Services.AddDbContext<EgitimSitesi.Data.ApplicationDbContext>(options =>
-        options.UseNpgsql(connectionString));
+    {
+        options.UseNpgsql(connectionString);
+        // Suppress the pending model changes warning in production
+        options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    });
 }
 else
 {

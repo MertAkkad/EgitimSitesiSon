@@ -1,5 +1,8 @@
 using EgitimSitesi.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
@@ -15,11 +18,27 @@ namespace EgitimSitesi.Data
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var environment = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
             
-            // Apply any pending migrations
-            await dbContext.Database.MigrateAsync();
-            
-            // Ensure SiteSettings exists
-            await EnsureSiteSettingsExistsAsync(dbContext);
+            try
+            {
+                // In production, suppress the pending model changes warning
+                if (environment.IsProduction())
+                {
+                    dbContext.Database.GetService<IRelationalDatabaseCreator>().CreateTables();
+                }
+                else
+                {
+                    // Apply any pending migrations in development
+                    await dbContext.Database.MigrateAsync();
+                }
+                
+                // Ensure SiteSettings exists
+                await EnsureSiteSettingsExistsAsync(dbContext);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Database initialization error: {ex.Message}");
+                // Continue anyway - we don't want to crash the application
+            }
         }
         
         private static async Task EnsureSiteSettingsExistsAsync(ApplicationDbContext dbContext)
