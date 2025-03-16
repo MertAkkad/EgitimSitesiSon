@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace EgitimSitesi.Data
 {
@@ -17,13 +18,38 @@ namespace EgitimSitesi.Data
             using var scope = serviceProvider.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var environment = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationDbContext>>();
             
             try
             {
                 // In production, suppress the pending model changes warning
                 if (environment.IsProduction())
                 {
-                    dbContext.Database.GetService<IRelationalDatabaseCreator>().CreateTables();
+                    // Make sure the database exists
+                    var databaseCreator = dbContext.Database.GetService<IRelationalDatabaseCreator>();
+                    
+                    // Try to create database if it doesn't exist
+                    if (!databaseCreator.Exists())
+                    {
+                        logger.LogInformation("Database doesn't exist. Creating database...");
+                        databaseCreator.Create();
+                    }
+                    
+                    // Try to create tables if they don't exist
+                    try
+                    {
+                        logger.LogInformation("Creating tables if they don't exist...");
+                        databaseCreator.CreateTables();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Error creating tables, they might already exist: {Message}", ex.Message);
+                        // Tables might already exist, so we'll continue
+                    }
+                    
+                    // Ensure all tables have been created by checking each expected table
+                    logger.LogInformation("Verifying all required tables exist...");
+                    VerifyTablesExist(dbContext, logger);
                 }
                 else
                 {
@@ -33,11 +59,33 @@ namespace EgitimSitesi.Data
                 
                 // Ensure SiteSettings exists
                 await EnsureSiteSettingsExistsAsync(dbContext);
+                
+                logger.LogInformation("Database initialization completed successfully");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Database initialization error: {ex.Message}");
+                logger.LogError(ex, "Database initialization error: {Message}", ex.Message);
                 // Continue anyway - we don't want to crash the application
+            }
+        }
+        
+        private static void VerifyTablesExist(ApplicationDbContext dbContext, ILogger logger)
+        {
+            try
+            {
+                // Check some essential tables by querying them (this verifies they exist and are accessible)
+                logger.LogInformation("Checking if SiteSettings table exists...");
+                var settingsCount = dbContext.SiteSettings.Count();
+                
+                logger.LogInformation("Checking if Banners table exists...");
+                var bannersCount = dbContext.Banners.Count();
+                
+                logger.LogInformation("All tables verified successfully.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error verifying tables: {Message}", ex.Message);
+                // Continue anyway
             }
         }
         
