@@ -32,7 +32,14 @@ if (builder.Environment.IsProduction())
     
     builder.Services.AddDbContext<EgitimSitesi.Data.ApplicationDbContext>(options =>
     {
-        options.UseNpgsql(connectionString);
+        options.UseNpgsql(connectionString, npgsqlOptions => 
+        {
+            // Use the same history table name
+            npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "public");
+            // Configure timestamp handling
+            npgsqlOptions.SetPostgresVersion(new Version(12, 0));
+        });
+        
         // Suppress the pending model changes warning in production
         options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         // Enable detailed logging

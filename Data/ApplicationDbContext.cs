@@ -1,6 +1,11 @@
 using EgitimSitesi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Reflection;
+using System;
 
 namespace EgitimSitesi.Data
 {
@@ -183,6 +188,57 @@ namespace EgitimSitesi.Data
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.CreationDate).HasDefaultValueSql(defaultDateFunction);
             });
+        }
+
+        // Override SaveChanges to convert DateTime properties to UTC
+        public override int SaveChanges()
+        {
+            ConvertDateTimePropertiesToUtc();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ConvertDateTimePropertiesToUtc();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            ConvertDateTimePropertiesToUtc();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            ConvertDateTimePropertiesToUtc();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void ConvertDateTimePropertiesToUtc()
+        {
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+
+            foreach (var entry in entries)
+            {
+                foreach (var property in entry.Entity.GetType().GetProperties())
+                {
+                    if (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))
+                    {
+                        if (property.GetValue(entry.Entity) is DateTime dateTime && dateTime.Kind != DateTimeKind.Utc)
+                        {
+                            property.SetValue(entry.Entity, dateTime.ToUniversalTime());
+                        }
+                        else if (property.GetValue(entry.Entity) is DateTime? nullableDateTime && 
+                                 nullableDateTime.HasValue && 
+                                 nullableDateTime.Value.Kind != DateTimeKind.Utc)
+                        {
+                            property.SetValue(entry.Entity, nullableDateTime.Value.ToUniversalTime());
+                        }
+                    }
+                }
+            }
         }
     }
 } 
