@@ -1,6 +1,8 @@
 using EgitimSitesi.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Hosting;
+using System.Linq;
 
 namespace EgitimSitesi.Data
 {
@@ -183,6 +185,43 @@ namespace EgitimSitesi.Data
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.CreationDate).HasDefaultValueSql(defaultDateFunction);
             });
+        }
+
+        public override int SaveChanges()
+        {
+            HandleDateTimeProperties();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            HandleDateTimeProperties();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void HandleDateTimeProperties()
+        {
+            // Convert all DateTime properties to UTC before saving when in production
+            if (_environment.IsProduction())
+            {
+                foreach (var entry in ChangeTracker.Entries())
+                {
+                    if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+                    {
+                        foreach (var property in entry.Properties)
+                        {
+                            if (property.Metadata.ClrType == typeof(DateTime) && property.CurrentValue != null)
+                            {
+                                DateTime dt = (DateTime)property.CurrentValue;
+                                if (dt.Kind != DateTimeKind.Utc)
+                                {
+                                    property.CurrentValue = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 } 
