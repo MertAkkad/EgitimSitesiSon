@@ -3,17 +3,11 @@ using EgitimSitesi.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using EgitimSitesi.Models;
 using CloudinaryDotNet;
-using EgitimSitesi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
-// Configure logging
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
 
 // Add database context
 if (builder.Environment.IsProduction())
@@ -30,24 +24,9 @@ if (builder.Environment.IsProduction())
     
     builder.Services.AddDbContext<EgitimSitesi.Data.ApplicationDbContext>(options =>
     {
-        options.UseNpgsql(connectionString, npgsqlOptions =>
-        {
-            // Set migrations compatibility
-            npgsqlOptions.MigrationsAssembly("EgitimSitesi");
-            
-            // Set retry on failure
-            npgsqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(30),
-                errorCodesToAdd: null);
-        });
-        
+        options.UseNpgsql(connectionString);
         // Suppress the pending model changes warning in production
         options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-        
-        // Add SqlServer to PostgreSQL translation
-        options.ReplaceService<Microsoft.EntityFrameworkCore.Query.ExpressionTranslators.IMethodCallTranslatorProvider,
-            EgitimSitesi.Data.PostgresMethodCallTranslatorProvider>();
     });
 }
 else
@@ -78,9 +57,6 @@ builder.Services.AddSingleton(provider => {
 builder.Services.AddScoped<EgitimSitesi.Services.CloudinaryService>();
 
 var app = builder.Build();
-
-// Use error handling middleware
-app.UseErrorHandling();
 
 // Initialize the database and ensure default data exists
 await EgitimSitesi.Data.DbInitializer.Initialize(app.Services);
