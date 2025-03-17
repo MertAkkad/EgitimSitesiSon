@@ -3,11 +3,17 @@ using EgitimSitesi.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using EgitimSitesi.Models;
 using CloudinaryDotNet;
+using EgitimSitesi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+// Configure logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // Add database context
 if (builder.Environment.IsProduction())
@@ -20,6 +26,8 @@ if (builder.Environment.IsProduction())
     var username = Environment.GetEnvironmentVariable("PGUSER");
     var password = Environment.GetEnvironmentVariable("PGPASSWORD");
     
+    Console.WriteLine($"PostgreSQL Connection Info - Host: {host}, Port: {port}, Database: {database}, Username: {username}");
+    
     var connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};SSL Mode=Require;Trust Server Certificate=true;";
     
     builder.Services.AddDbContext<EgitimSitesi.Data.ApplicationDbContext>(options =>
@@ -27,6 +35,9 @@ if (builder.Environment.IsProduction())
         options.UseNpgsql(connectionString);
         // Suppress the pending model changes warning in production
         options.ConfigureWarnings(warnings => warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+        // Enable detailed logging
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
     });
 }
 else
@@ -57,6 +68,9 @@ builder.Services.AddSingleton(provider => {
 builder.Services.AddScoped<EgitimSitesi.Services.CloudinaryService>();
 
 var app = builder.Build();
+
+// Use the exception handling middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Initialize the database and ensure default data exists
 await EgitimSitesi.Data.DbInitializer.Initialize(app.Services);
