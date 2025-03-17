@@ -37,7 +37,7 @@ namespace EgitimSitesi.Models
 
         [Display(Name = "Gönderim Tarihi")]
         [DataType(DataType.DateTime)]
-        public DateTime GonderimTarihi { get; set; } = DateTime.Now;
+        public DateTime GonderimTarihi { get; set; } = DateTime.UtcNow;
 
         [Display(Name = "IP Adresi")]
         [StringLength(50)]

@@ -201,9 +201,9 @@ namespace EgitimSitesi.Data
 
         private void HandleDateTimeProperties()
         {
-            // Convert all DateTime properties to UTC before saving when in production
-            if (_environment.IsProduction())
+            try
             {
+                // Convert all DateTime properties to UTC before saving
                 foreach (var entry in ChangeTracker.Entries())
                 {
                     if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
@@ -215,12 +215,30 @@ namespace EgitimSitesi.Data
                                 DateTime dt = (DateTime)property.CurrentValue;
                                 if (dt.Kind != DateTimeKind.Utc)
                                 {
-                                    property.CurrentValue = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                                    // Convert to UTC and ensure Kind is set
+                                    if (dt.Kind == DateTimeKind.Local)
+                                    {
+                                        // If it's Local, convert to UTC
+                                        property.CurrentValue = dt.ToUniversalTime();
+                                    }
+                                    else
+                                    {
+                                        // If it's Unspecified, just specify it as UTC
+                                        property.CurrentValue = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                                    }
+                                    
+                                    // Log for debugging
+                                    Console.WriteLine($"Converted DateTime from {dt.Kind} to UTC for property {property.Metadata.Name} in entity {entry.Metadata.Name}");
                                 }
                             }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't crash
+                Console.WriteLine($"Error in HandleDateTimeProperties: {ex.Message}");
             }
         }
     }

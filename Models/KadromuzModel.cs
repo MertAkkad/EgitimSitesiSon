@@ -48,7 +48,7 @@ namespace EgitimSitesi.Models
 
         [DataType(DataType.Date)]
         [Display(Name = "Oluşturma Tarihi")]
-        public DateTime CreationDate { get; set; } = DateTime.Now;
+        public DateTime CreationDate { get; set; } = DateTime.UtcNow;
     }
 
     public enum Grade

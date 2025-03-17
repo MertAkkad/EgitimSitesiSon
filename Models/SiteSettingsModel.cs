@@ -12,6 +12,8 @@ namespace EgitimSitesi.Models
         [StringLength(50)]
         public string ActiveLayout { get; set; } = "_Layout"; // Default layout
         
-        public DateTime LastUpdated { get; set; } = DateTime.Now;
+        [Display(Name = "Son Güncelleme")]
+        [DataType(DataType.DateTime)]
+        public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     }
 } 

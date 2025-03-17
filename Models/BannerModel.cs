@@ -28,6 +28,7 @@ namespace EgitimSitesi.Models
         public bool IsActive { get; set; } = true;
 
         [DataType(DataType.Date)]
-        public DateTime CreationDate { get; set; } = DateTime.Now;
+        [Display(Name = "Oluşturma Tarihi")]
+        public DateTime CreationDate { get; set; } = DateTime.UtcNow;
     }
 } 

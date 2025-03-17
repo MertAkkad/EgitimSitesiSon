@@ -67,9 +67,9 @@ namespace EgitimSitesi.Controllers.AdminControllers
         }
 
         // POST: Admin/Hakkimizda/Create
-        [HttpPost("Create")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(HakkimizdaModel hakkimizda, IFormFile imageFile)
+        public async Task<IActionResult> Create(HakkimizdaModel hakkimizda, IFormFile? imageFile)
         {
             // Check if a record already exists since this should be a singleton
             if (_context.Hakkimizda.Any())
@@ -82,6 +82,9 @@ namespace EgitimSitesi.Controllers.AdminControllers
             {
                 try
                 {
+                    // Set date to UTC
+                    hakkimizda.CreationDate = DateTime.UtcNow;
+
                     // Process image if provided
                     if (imageFile != null && imageFile.Length > 0)
                     {
@@ -105,9 +108,6 @@ namespace EgitimSitesi.Controllers.AdminControllers
                         // Set the image path
                         hakkimizda.ImagePath = "/uploads/hakkimizda/" + uniqueFileName;
                     }
-
-                    // Set creation date
-                    hakkimizda.CreationDate = DateTime.Now;
 
                     // Add to database
                     _context.Add(hakkimizda);
@@ -143,9 +143,9 @@ namespace EgitimSitesi.Controllers.AdminControllers
         }
 
         // POST: Admin/Hakkimizda/Edit/5
-        [HttpPost("Edit/{id}")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, HakkimizdaModel hakkimizda, IFormFile imageFile)
+        public async Task<IActionResult> Edit(int id, HakkimizdaModel hakkimizda, IFormFile? imageFile)
         {
             if (id != hakkimizda.Id)
             {
@@ -156,10 +156,24 @@ namespace EgitimSitesi.Controllers.AdminControllers
             {
                 try
                 {
-                    var existingHakkimizda = await _context.Hakkimizda.AsNoTracking().FirstOrDefaultAsync(h => h.Id == id);
+                    // Get existing entity
+                    var existingHakkimizda = await _context.Hakkimizda.FindAsync(id);
+                    
                     if (existingHakkimizda == null)
                     {
                         return NotFound();
+                    }
+                    
+                    // Update properties
+                    existingHakkimizda.Tarihcemiz = hakkimizda.Tarihcemiz;
+                    existingHakkimizda.Vizyonumuz = hakkimizda.Vizyonumuz;
+                    existingHakkimizda.Misyonumuz = hakkimizda.Misyonumuz;
+                    existingHakkimizda.IsActive = hakkimizda.IsActive;
+                    
+                    // Preserve the original creation date but ensure it's UTC
+                    if (existingHakkimizda.CreationDate.Kind != DateTimeKind.Utc)
+                    {
+                        existingHakkimizda.CreationDate = DateTime.SpecifyKind(existingHakkimizda.CreationDate, DateTimeKind.Utc);
                     }
 
                     // Process image if provided
@@ -193,19 +207,16 @@ namespace EgitimSitesi.Controllers.AdminControllers
                         }
 
                         // Set the new image path
-                        hakkimizda.ImagePath = "/uploads/hakkimizda/" + uniqueFileName;
+                        existingHakkimizda.ImagePath = "/uploads/hakkimizda/" + uniqueFileName;
                     }
                     else
                     {
                         // Keep the existing image path
-                        hakkimizda.ImagePath = existingHakkimizda.ImagePath;
+                        existingHakkimizda.ImagePath = hakkimizda.ImagePath;
                     }
 
-                    // Preserve the creation date
-                    hakkimizda.CreationDate = existingHakkimizda.CreationDate;
-
                     // Update the entity
-                    _context.Update(hakkimizda);
+                    _context.Update(existingHakkimizda);
                     await _context.SaveChangesAsync();
 
                     return RedirectToAction(nameof(Index));

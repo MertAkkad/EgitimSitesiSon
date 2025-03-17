@@ -121,7 +121,7 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     }
 
                     // Set creation date
-                    sube.CreationDate = DateTime.Now;
+                    sube.CreationDate = DateTime.UtcNow;
 
                     // Add to database
                     _context.Add(sube);
@@ -182,8 +182,15 @@ namespace EgitimSitesi.Controllers.AdminControllers
                         await ShiftBranchOrders(sube.Order, sube.Id);
                     }
 
-                    // Preserve creation date
-                    sube.CreationDate = existingSube.CreationDate;
+                    // Preserve creation date but ensure it's UTC
+                    if (existingSube.CreationDate.Kind != DateTimeKind.Utc)
+                    {
+                        sube.CreationDate = DateTime.SpecifyKind(existingSube.CreationDate, DateTimeKind.Utc);
+                    }
+                    else
+                    {
+                        sube.CreationDate = existingSube.CreationDate;
+                    }
 
                     // Update the entity
                     _context.Update(sube);

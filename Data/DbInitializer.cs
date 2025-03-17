@@ -50,11 +50,37 @@ namespace EgitimSitesi.Data
                 var defaultSettings = new SiteSettingsModel
                 {
                     ActiveLayout = "_Layout",
-                    LastUpdated = DateTime.Now
+                    LastUpdated = DateTime.UtcNow
                 };
                 
                 dbContext.SiteSettings.Add(defaultSettings);
                 await dbContext.SaveChangesAsync();
+            }
+
+            // Check if Hakkimizda record exists
+            if (!await dbContext.Hakkimizda.AnyAsync())
+            {
+                try
+                {
+                    // Create a default Hakkimizda record
+                    var hakkimizda = new HakkimizdaModel
+                    {
+                        Tarihcemiz = "Kurum Tarihçesi burada yer alacaktır.",
+                        Vizyonumuz = "Kurum Vizyonu burada yer alacaktır.",
+                        Misyonumuz = "Kurum Misyonu burada yer alacaktır.",
+                        ImagePath = "/images/about.jpg",
+                        CreationDate = DateTime.UtcNow,
+                        IsActive = true
+                    };
+                    
+                    dbContext.Hakkimizda.Add(hakkimizda);
+                    await dbContext.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error creating Hakkimizda: {ex.Message}");
+                    // Continue processing
+                }
             }
         }
     }

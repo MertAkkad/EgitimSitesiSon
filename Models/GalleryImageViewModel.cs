@@ -21,9 +21,9 @@ namespace EgitimSitesi.Models
         [Display(Name = "Açıklama")]
         public string Description { get; set; }
         
-        [Display(Name = "Oluşturulma Tarihi")]
         [DataType(DataType.Date)]
-        public DateTime CreationDate { get; set; } = DateTime.Now;
+        [Display(Name = "Oluşturma Tarihi")]
+        public DateTime CreationDate { get; set; } = DateTime.UtcNow;
         
         [Display(Name = "Aktif")]
         public bool IsActive { get; set; } = true;

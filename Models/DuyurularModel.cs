@@ -44,12 +44,12 @@ namespace EgitimSitesi.Models
 
         [DataType(DataType.Date)]
         [Display(Name = "Oluşturma Tarihi")]
-        public DateTime CreationDate { get; set; } = DateTime.Now;
+        public DateTime CreationDate { get; set; } = DateTime.UtcNow;
         
         // Duyuru tarihi - görüntülenen tarih
         [DataType(DataType.Date)]
         [Display(Name = "Duyuru Tarihi")]
-        public DateTime AnnouncementDate { get; set; } = DateTime.Now;
+        public DateTime AnnouncementDate { get; set; } = DateTime.UtcNow;
         
         // Duyuru türü (Kayıt, Sınav, Başarı Haberi gibi)
         [StringLength(50, ErrorMessage = "Duyuru türü en fazla 50 karakter olabilir")]
