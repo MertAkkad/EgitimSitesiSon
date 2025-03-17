@@ -230,11 +230,12 @@ namespace EgitimSitesi.Data
                         {
                             property.SetValue(entry.Entity, dateTime.ToUniversalTime());
                         }
-                        else if (property.GetValue(entry.Entity) is DateTime? nullableDateTime && 
-                                 nullableDateTime.HasValue && 
-                                 nullableDateTime.Value.Kind != DateTimeKind.Utc)
+                        else if (property.GetValue(entry.Entity) is DateTime? nullableDateTime) 
                         {
-                            property.SetValue(entry.Entity, nullableDateTime.Value.ToUniversalTime());
+                            if (nullableDateTime.HasValue && nullableDateTime.Value.Kind != DateTimeKind.Utc)
+                            {
+                                property.SetValue(entry.Entity, nullableDateTime.Value.ToUniversalTime());
+                            }
                         }
                     }
                 }
