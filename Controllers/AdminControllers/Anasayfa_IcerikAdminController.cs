@@ -114,7 +114,7 @@ namespace EgitimSitesi.Controllers.AdminControllers
                 }
 
                 // Set creation date
-                contentItem.CreationDate = DateTime.Now;
+                contentItem.CreationDate = DateTime.UtcNow;
 
                 // Add to database
                 _context.Add(contentItem);
@@ -225,8 +225,15 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     await ShiftIcerikOrders(contentItem.Order, contentItem.Id);
                 }
 
-                // Preserve creation date
-                contentItem.CreationDate = existingContentItem.CreationDate;
+                // Preserve creation date but ensure it's UTC
+                if (existingContentItem.CreationDate.Kind != DateTimeKind.Utc)
+                {
+                    contentItem.CreationDate = DateTime.SpecifyKind(existingContentItem.CreationDate, DateTimeKind.Utc);
+                }
+                else
+                {
+                    contentItem.CreationDate = existingContentItem.CreationDate;
+                }
 
                 // Update the entity
                 _context.Update(contentItem);

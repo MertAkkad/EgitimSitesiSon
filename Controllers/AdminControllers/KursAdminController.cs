@@ -79,7 +79,7 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     model.Image = "/uploads/kurslar/" + uniqueFileName;
                 }
                 
-                model.CreationDate = DateTime.Now;
+                model.CreationDate = DateTime.UtcNow;
                 
                 _context.Add(model);
                 await _context.SaveChangesAsync();
@@ -153,6 +153,12 @@ namespace EgitimSitesi.Controllers.AdminControllers
                         }
                         
                         existingKurs.Image = "/uploads/kurslar/" + uniqueFileName;
+                    }
+                    
+                    // Ensure CreationDate is maintained and properly converted to UTC if needed
+                    if (existingKurs.CreationDate.Kind != DateTimeKind.Utc)
+                    {
+                        existingKurs.CreationDate = DateTime.SpecifyKind(existingKurs.CreationDate, DateTimeKind.Utc);
                     }
                     
                     await _context.SaveChangesAsync();

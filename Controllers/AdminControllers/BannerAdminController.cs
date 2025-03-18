@@ -99,7 +99,7 @@ namespace EgitimSitesi.Controllers.AdminControllers
                 }
 
                 // Set creation date
-                banner.CreationDate = DateTime.Now;
+                banner.CreationDate = DateTime.UtcNow;
 
                 // Add to database
                 _context.Add(banner);
@@ -197,8 +197,15 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     await ShiftBannerOrders(banner.Order, banner.Id);
                 }
 
-                // Preserve creation date
-                banner.CreationDate = existingBanner.CreationDate;
+                // Preserve creation date but ensure it's UTC
+                if (existingBanner.CreationDate.Kind != DateTimeKind.Utc)
+                {
+                    banner.CreationDate = DateTime.SpecifyKind(existingBanner.CreationDate, DateTimeKind.Utc);
+                }
+                else
+                {
+                    banner.CreationDate = existingBanner.CreationDate;
+                }
 
                 // Update the entity
                 _context.Update(banner);

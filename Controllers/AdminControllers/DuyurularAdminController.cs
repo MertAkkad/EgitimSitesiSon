@@ -89,13 +89,18 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     await ShiftDuyuruOrders(duyuru.Order);
                 }
 
-                // Set creation date
-                duyuru.CreationDate = DateTime.Now;
+                // Set creation and announcement dates
+                duyuru.CreationDate = DateTime.UtcNow;
                 
-                // Set announcement date if not specified
-                if (duyuru.AnnouncementDate == DateTime.MinValue)
+                // Set announcement date to now if not provided
+                if (duyuru.AnnouncementDate == default)
                 {
-                    duyuru.AnnouncementDate = DateTime.Now;
+                    duyuru.AnnouncementDate = DateTime.UtcNow;
+                }
+                else if (duyuru.AnnouncementDate.Kind != DateTimeKind.Utc)
+                {
+                    // Ensure AnnouncementDate is UTC
+                    duyuru.AnnouncementDate = DateTime.SpecifyKind(duyuru.AnnouncementDate, DateTimeKind.Utc);
                 }
 
                 // Add to database
@@ -179,8 +184,21 @@ namespace EgitimSitesi.Controllers.AdminControllers
                         await ShiftDuyuruOrders(duyuru.Order, duyuru.Id);
                     }
 
-                    // Preserve creation date
-                    duyuru.CreationDate = existingDuyuru.CreationDate;
+                    // Preserve creation date but ensure it's UTC
+                    if (existingDuyuru.CreationDate.Kind != DateTimeKind.Utc)
+                    {
+                        duyuru.CreationDate = DateTime.SpecifyKind(existingDuyuru.CreationDate, DateTimeKind.Utc);
+                    }
+                    else
+                    {
+                        duyuru.CreationDate = existingDuyuru.CreationDate;
+                    }
+                    
+                    // Ensure AnnouncementDate is UTC
+                    if (duyuru.AnnouncementDate.Kind != DateTimeKind.Utc)
+                    {
+                        duyuru.AnnouncementDate = DateTime.SpecifyKind(duyuru.AnnouncementDate, DateTimeKind.Utc);
+                    }
 
                     _context.Update(duyuru);
                     await _context.SaveChangesAsync();

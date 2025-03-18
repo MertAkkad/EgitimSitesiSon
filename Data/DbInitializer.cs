@@ -23,7 +23,24 @@ namespace EgitimSitesi.Data
                 // In production, suppress the pending model changes warning
                 if (environment.IsProduction())
                 {
-                    dbContext.Database.GetService<IRelationalDatabaseCreator>().CreateTables();
+                    try
+                    {
+                        // Try to create tables but ignore errors if tables already exist
+                        var dbCreator = dbContext.Database.GetService<IRelationalDatabaseCreator>();
+                        if (!dbCreator.Exists())
+                        {
+                            dbCreator.Create();
+                        }
+                        
+                        if (!dbCreator.HasTables())
+                        {
+                            dbCreator.CreateTables();
+                        }
+                    }
+                    catch (Exception ex) when (ex.Message.Contains("already exists"))
+                    {
+                        Console.WriteLine("Some tables already exist. This is normal in a deployed application.");
+                    }
                 }
                 else
                 {

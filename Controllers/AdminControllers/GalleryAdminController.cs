@@ -134,7 +134,7 @@ namespace EgitimSitesi.Controllers.AdminControllers
                 // Update the model with Cloudinary information
                 model.Image = uploadResult.SecureUrl.ToString();
                 model.CloudinaryPublicId = uploadResult.PublicId;
-                model.CreationDate = DateTime.Now;
+                model.CreationDate = DateTime.UtcNow;
                 
                 _context.Add(model);
                 await _context.SaveChangesAsync();
@@ -209,6 +209,12 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     galleryImage.Description = model.Description;
                     galleryImage.Order = model.Order;
                     galleryImage.IsActive = model.IsActive;
+                    
+                    // Ensure CreationDate is preserved and converted to UTC if needed
+                    if (galleryImage.CreationDate.Kind != DateTimeKind.Utc)
+                    {
+                        galleryImage.CreationDate = DateTime.SpecifyKind(galleryImage.CreationDate, DateTimeKind.Utc);
+                    }
                     
                     _context.Update(galleryImage);
                     await _context.SaveChangesAsync();

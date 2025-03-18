@@ -165,18 +165,19 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     if (siteSettings == null)
                     {
                         // Create new settings if none exist
-                        siteSettings = new Models.SiteSettingsModel
+                        var defaultSettings = new SiteSettingsModel
                         {
-                            ActiveLayout = model.ActiveLayout,
-                            LastUpdated = DateTime.Now
+                            ActiveLayout = "_Layout",
+                            LastUpdated = DateTime.UtcNow
                         };
-                        _context.SiteSettings.Add(siteSettings);
+                        _context.SiteSettings.Add(defaultSettings);
+                        siteSettings = defaultSettings;
                     }
                     else
                     {
                         // Update existing settings
                         siteSettings.ActiveLayout = model.ActiveLayout;
-                        siteSettings.LastUpdated = DateTime.Now;
+                        siteSettings.LastUpdated = DateTime.UtcNow;
                     }
                     
                     await _context.SaveChangesAsync();

@@ -77,8 +77,8 @@ namespace EgitimSitesi.Controllers.AdminControllers
             {
                 try
                 {
-                    // Set creation date
-                    iletisim.CreationDate = DateTime.Now;
+                    // Set creation date to UTC
+                    iletisim.CreationDate = DateTime.UtcNow;
                     iletisim.IsActive = true;
 
                     // Add to database
@@ -134,8 +134,15 @@ namespace EgitimSitesi.Controllers.AdminControllers
                         return NotFound();
                     }
 
-                    // Preserve the creation date
-                    iletisim.CreationDate = existingIletisim.CreationDate;
+                    // Preserve creation date but ensure it's UTC
+                    if (existingIletisim.CreationDate.Kind != DateTimeKind.Utc)
+                    {
+                        iletisim.CreationDate = DateTime.SpecifyKind(existingIletisim.CreationDate, DateTimeKind.Utc);
+                    }
+                    else
+                    {
+                        iletisim.CreationDate = existingIletisim.CreationDate;
+                    }
 
                     // Update the entity
                     _context.Update(iletisim);

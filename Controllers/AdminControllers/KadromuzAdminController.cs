@@ -124,7 +124,7 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     staff.ImagePath = "/img/staff/" + uniqueFileName;
                 }
 
-                staff.CreationDate = DateTime.Now;
+                staff.CreationDate = DateTime.UtcNow;
                 _context.Add(staff);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -199,6 +199,16 @@ namespace EgitimSitesi.Controllers.AdminControllers
                     {
                         // Keep existing image
                         staff.ImagePath = existingStaff.ImagePath;
+                    }
+
+                    // Preserve creation date but ensure it's UTC
+                    if (existingStaff.CreationDate.Kind != DateTimeKind.Utc)
+                    {
+                        staff.CreationDate = DateTime.SpecifyKind(existingStaff.CreationDate, DateTimeKind.Utc);
+                    }
+                    else
+                    {
+                        staff.CreationDate = existingStaff.CreationDate;
                     }
 
                     _context.Update(staff);
